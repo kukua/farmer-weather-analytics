@@ -30,7 +30,7 @@ class Notifications extends React.Component {
 	handle (errors) {
 		if ( ! _.isArray(errors)) return
 
-		let handled = this.state.handled
+		var handled = this.state.handled
 
 		_.each(errors, (item) => {
 			if (_.indexOf(handled, item) !== -1) return
@@ -42,7 +42,7 @@ class Notifications extends React.Component {
 		this.setState({ handled })
 	}
 	formatMessage (item) {
-		let message = item.err.toString()
+		var message = item.err.toString()
 
 		if (item.err instanceof FetchError) message = item.err.message
 

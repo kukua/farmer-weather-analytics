@@ -10,7 +10,7 @@ export function parseJSON (res) { return res.json() }
 
 export class FetchError extends Error {
 	constructor (res, data) {
-		let message = data.message
+		var message = data.message
 		if ( ! message && _.isObject(data.messages)) {
 			message = _.map(data.messages, (message) => message[0]).join('\n')
 		}

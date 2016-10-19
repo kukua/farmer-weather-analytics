@@ -37,4 +37,4 @@ export default class User {
 	}
 }
 
-export let instance = new User()
+export var instance = new User()

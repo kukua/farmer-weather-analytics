@@ -6,7 +6,7 @@ export default {
 		NotificationManager.error(message)
 	},
 	action (type, action) {
-		let message = _.capitalize(type, true) + ' ' + action + '.'
+		var message = _.capitalize(type, true) + ' ' + action + '.'
 		NotificationManager.success(message)
 	},
 	created (type) {

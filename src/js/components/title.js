@@ -3,8 +3,8 @@ import { hashHistory } from 'react-router'
 
 export default class Title extends React.Component {
 	render () {
-		let backButton = (this.props.backButton !== false)
-		let backButtonLabel = (this.props.backButtonLabel || 'Go back')
+		var backButton = (this.props.backButton !== false)
+		var backButtonLabel = (this.props.backButtonLabel || 'Go back')
 
 		return (
 			<div>

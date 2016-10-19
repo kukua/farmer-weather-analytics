@@ -1,61 +1,82 @@
 import React from 'react'
-//import { Link } from 'react-router'
-//import Title from '../title'
+import moment from 'moment'
+import Title from '../title'
 import { connect } from 'react-redux'
 import { instance as user } from '../../lib/user'
-//import { Table } from '../../lib/table'
 import actions from '../../actions/forecast'
 
+const formatType = (forecast) => {
+	// ucfirst
+	return forecast.type.substr(0, 1).toUpperCase() + forecast.type.substr(1)
+}
+const formatDate = (forecast) => {
+	return moment(forecast.date).utc().format('YYYY-MM-DD' + (forecast.type === 'hourly' ? ' HH:mm' : ''))
+}
+
 const mapStateToProps = (state) => {
-	let { loading: isFetching, items } = state.forecast.fetchAll
+	var { loading: isFetching, items } = state.forecast.fetchAll
 	return { isFetching, items }
 }
 
 const mapDispatchToProps = (dispatch) => {
 	return {
-		onFetch (userId) {
-			return dispatch(actions.fetchByUserId(userId))
+		onFetch (userId, date) {
+			return dispatch(actions.fetchByUserIdAndDate(userId, date))
 		},
 	}
 }
 
 class Index extends React.Component {
 	loadData () {
-		this.props.onFetch(user.id)
+		// TODO(mauvm): Allow passing in date as url parameter and determine isToday with that value
+		this.props.onFetch(user.id, moment().utc().format('YYYY-MM-DD'))
 	}
 	componentWillMount () {
 		this.loadData()
 	}
 
 	render () {
-		//let isLoading = (this.props.isFetching)
+		var isLoading = (this.props.isFetching)
+		var isToday = isLoading || (this.props.items && moment(this.props.items[0].date).isSame(moment(), 'day'))
 
-		console.log(this.props.items)
-		return (<div>Hello world!</div>)
-
-		/*
 		return (
 			<div>
-				<Title title="Templates">
-					<Link to="/templates/create" class="btn btn-sm btn-success icon-plus">Add template</Link>
-				</Title>
-				<Table loading={isLoading}
-					columns={{
-						name: {
-							label: 'Name',
-							key: 'name',
-						},
-						updatedAt: {
-							label: 'Last updated',
-							key: 'updated_at',
-							isDate: true,
-						},
-					}}
-					rows={this.props.items || []}
-					onRowClick={(item) => this.context.router.replace('/templates/' + item.id + '/edit')} />
+				<Title title="Forecasts" backButton={false} />
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Type</th>
+							<th>Date</th>
+							<th>Temperature</th>
+							<th>Rainfall</th>
+							<th>Wind speed</th>
+							{isToday
+								? <th>Similar?</th>
+								: <th>Accurate?</th>
+							}
+						</tr>
+					</thead>
+					<tbody>
+						{isLoading
+							? <tr><td colSpan="6">Loading…</td></tr>
+							: (this.props.items
+								? this.props.items.map((forecast, i) => (
+									<tr key={'' + i}>
+										<td>{formatType(forecast)}</td>
+										<td>{formatDate(forecast)}</td>
+										<td>{forecast.temp}</td>
+										<td>{forecast.rain}</td>
+										<td>{forecast.windSpeed}</td>
+										<td>
+										</td>
+									</tr>))
+								: <tr><td colSpan="6">No items…</td></tr>
+								)
+						}
+					</tbody>
+				</table>
 			</div>
 		)
-		*/
 	}
 }
 

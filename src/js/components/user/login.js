@@ -6,7 +6,7 @@ import { instance as user } from '../../lib/user'
 import actions from '../../actions/user'
 
 const mapStateToProps = (state) => {
-	let { loading: isFetching, item } = state.user.login
+	var { loading: isFetching, item } = state.user.login
 	return { isFetching, item }
 }
 
@@ -22,7 +22,7 @@ class Login extends React.Component {
 	onSubmit (ev) {
 		ev.preventDefault()
 
-		let form = ev.target
+		var form = ev.target
 		this.props.onLogin(form.email.value, form.password.value).then((item) => {
 			user.set(item)
 			this.context.router.replace('/')

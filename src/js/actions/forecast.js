@@ -2,11 +2,11 @@ import { instance as user } from '../lib/user'
 import { checkStatus, parseJSON } from '../lib/fetch'
 
 export default {
-	fetchByUserId (id) {
+	fetchByUserIdAndDate (id, date) {
 		return (dispatch) => {
 			dispatch({ type: 'FORECAST_FETCH_ALL' })
 
-			return fetch('/forecasts?filter=user_id:' + id, {
+			return fetch('/forecasts?filter=user_id:' + id + '&date=' + date, {
 				headers: {
 					'Authorization': 'Token ' + user.token,
 					'Accept': 'application/json',

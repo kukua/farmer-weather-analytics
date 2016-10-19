@@ -5,7 +5,7 @@ import { instance as user } from '../../lib/user'
 import actions from '../../actions/user'
 
 const mapStateToProps = (state) => {
-	let { loading: isCreating, item } = state.user.create
+	var { loading: isCreating, item } = state.user.create
 	return { isCreating, item }
 }
 
@@ -27,9 +27,9 @@ class Register extends React.Component {
 	onSubmit (ev) {
 		ev.preventDefault()
 
-		let form = ev.target
-		let password = form.password.value
-		let passwordConfirm = form.password_confirmation.value
+		var form = ev.target
+		var password = form.password.value
+		var passwordConfirm = form.password_confirmation.value
 
 		if (password !== passwordConfirm) {
 			this.props.onError('The passwords do not match.')
@@ -53,7 +53,7 @@ class Register extends React.Component {
 	}
 
 	render() {
-		let isLoading = this.props.isCreating
+		var isLoading = this.props.isCreating
 
 		return (
 			<div class="row">

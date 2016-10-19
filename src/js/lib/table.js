@@ -6,7 +6,7 @@ import date from './date'
 export class Table extends React.Component {
 	getColumnSchema () {
 		return _.map(this.props.columns, (column) => {
-			let cell = {}
+			var cell = {}
 
 			if (column.key) {
 				cell.property = column.key
@@ -43,8 +43,8 @@ export class Table extends React.Component {
 	}
 
 	render () {
-		let columns = this.getColumnSchema()
-		let rows = this.resolveRows(columns)
+		var columns = this.getColumnSchema()
+		var rows = this.resolveRows(columns)
 
 		return (
 			<DataTable.Provider
