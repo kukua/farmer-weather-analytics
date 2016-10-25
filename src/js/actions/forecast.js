@@ -2,11 +2,11 @@ import { instance as user } from '../lib/user'
 import { checkStatus, parseJSON } from '../lib/fetch'
 
 export default {
-	fetchByUserIdAndDate (id, date) {
+	fetchByLocationIdAndDate (id, date) {
 		return (dispatch) => {
-			dispatch({ type: 'FORECAST_FETCH_ALL' })
+			dispatch({ type: 'FORECAST_FETCH' })
 
-			return fetch('/forecasts?filter=user_id:' + id + '&date=' + date, {
+			return fetch('/forecasts/' + id + '?date=' + date, {
 				headers: {
 					'Authorization': 'Token ' + user.token,
 					'Accept': 'application/json',
@@ -14,13 +14,13 @@ export default {
 			})
 				.then(checkStatus)
 				.then(parseJSON)
-				.then((items) => {
-					dispatch({ type: 'FORECAST_FETCH_ALL_SUCCESS', items })
-					return items
+				.then((item) => {
+					dispatch({ type: 'FORECAST_FETCH_SUCCESS', item })
+					return item
 				})
 				.catch((err) => {
 					dispatch({ type: 'ERROR_ADD', err })
-					dispatch({ type: 'FORECAST_FETCH_ALL_FAIL', err })
+					dispatch({ type: 'FORECAST_FETCH_FAIL', err })
 					return Promise.reject(err)
 				})
 		}

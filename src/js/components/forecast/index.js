@@ -1,43 +1,62 @@
 import React from 'react'
 import moment from 'moment'
+import _ from 'lodash'
 import Title from '../title'
 import { connect } from 'react-redux'
-import { instance as user } from '../../lib/user'
 import actions from '../../actions/forecast'
 
 const formatType = (forecast) => {
-	// ucfirst
-	return forecast.type.substr(0, 1).toUpperCase() + forecast.type.substr(1)
+	return forecast.type.substr(0, 1).toUpperCase() + forecast.type.substr(1) // ucfirst
 }
 const formatDate = (forecast) => {
 	return moment(forecast.date).utc().format('YYYY-MM-DD' + (forecast.type === 'hourly' ? ' HH:mm' : ''))
 }
 
 const mapStateToProps = (state) => {
-	var { loading: isFetching, items } = state.forecast.fetchAll
-	return { isFetching, items }
+	var { loading: isFetching, item } = state.forecast.fetch
+	return { isFetching, item }
 }
 
 const mapDispatchToProps = (dispatch) => {
 	return {
-		onFetch (userId, date) {
-			return dispatch(actions.fetchByUserIdAndDate(userId, date))
+		onFetch (id, date) {
+			return dispatch(actions.fetchByLocationIdAndDate(id, date))
 		},
 	}
 }
 
 class Index extends React.Component {
 	loadData () {
-		// TODO(mauvm): Allow passing in date as url parameter and determine isToday with that value
-		this.props.onFetch(user.id, moment().utc().format('YYYY-MM-DD'))
+		var id = 100149954
+		this.props.onFetch(id, this.props.params.date)
 	}
 	componentWillMount () {
 		this.loadData()
 	}
+	componentWillReceiveProps (next) {
+		if (next.params.date !== this.props.params.date) {
+			setTimeout(() => this.loadData(), 0)
+		}
+	}
+
+	prepareForecasts (forecasts) {
+		// Add types
+		var daily  = _.map(forecasts.daily , (item) => { item.type = 'daily'; return item })
+		var hourly = _.map(forecasts.hourly, (item) => { item.type = 'hourly'; return item })
+
+		// Zip
+		var items = daily.splice(0, 1)
+		items = items.concat(hourly)
+		items = items.concat(daily)
+
+		return items
+	}
 
 	render () {
 		var isLoading = (this.props.isFetching)
-		var isToday = isLoading || (this.props.items && moment(this.props.items[0].date).isSame(moment(), 'day'))
+		var item = this.props.item
+		var isToday = isLoading || (item && moment(item.forecasts.date).isSame(moment(), 'day'))
+		var items = (item ? this.prepareForecasts(item.forecasts) : [])
 
 		return (
 			<div>
@@ -48,8 +67,10 @@ class Index extends React.Component {
 							<th>Type</th>
 							<th>Date</th>
 							<th>Temperature</th>
-							<th>Rainfall</th>
+							<th>Precipitation</th>
 							<th>Wind speed</th>
+							<th>Wind direction</th>
+							<th>Humidity</th>
 							{isToday
 								? <th>Similar?</th>
 								: <th>Accurate?</th>
@@ -58,19 +79,21 @@ class Index extends React.Component {
 					</thead>
 					<tbody>
 						{isLoading
-							? <tr><td colSpan="6">Loading…</td></tr>
-							: (this.props.items
-								? this.props.items.map((forecast, i) => (
+							? <tr><td colSpan="8">Loading…</td></tr>
+							: (items
+								? items.map((forecast, i) => (
 									<tr key={'' + i}>
 										<td>{formatType(forecast)}</td>
 										<td>{formatDate(forecast)}</td>
-										<td>{forecast.temp}</td>
-										<td>{forecast.rain}</td>
-										<td>{forecast.windSpeed}</td>
+										<td>{forecast.temp || `${forecast.tempLow}-${forecast.tempHigh}`} °C</td>
+										<td>{`${forecast.precip} mm` + (forecast.type === 'daily' ? ` (${forecast.precipChance}%)` : '')}</td>
+										<td>{forecast.windSpeed} km/h</td>
+										<td>{forecast.windDir}</td>
+										<td>{forecast.humid ? `${forecast.humid} %` : ''}</td>
 										<td>
 										</td>
 									</tr>))
-								: <tr><td colSpan="6">No items…</td></tr>
+								: <tr><td colSpan="8">No items…</td></tr>
 								)
 						}
 					</tbody>
@@ -83,7 +106,16 @@ class Index extends React.Component {
 Index.propTypes = {
 	onFetch: React.PropTypes.func.isRequired,
 	isFetching: React.PropTypes.bool,
-	items: React.PropTypes.array,
+	params: React.PropTypes.shape({
+		date: React.PropTypes.string,
+	}),
+	item: React.PropTypes.shape({
+		forecasts: React.PropTypes.shape({
+			daily: React.PropTypes.array,
+			date: React.PropTypes.string,
+			hourly: React.PropTypes.array,
+		}),
+	}),
 }
 Index.contextTypes = {
 	router: React.PropTypes.object.isRequired,

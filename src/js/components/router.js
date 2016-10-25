@@ -1,5 +1,6 @@
 import React from 'react'
-import { Router, Route, IndexRedirect, hashHistory } from 'react-router'
+import { Router, IndexRedirect, Route, Redirect, hashHistory } from 'react-router'
+import moment from 'moment'
 import { instance as user } from '../lib/user'
 import notify from '../lib/notify'
 
@@ -31,7 +32,8 @@ export default (
 			<Route path="users/register" component={UserRegister} onEnter={isAuthenticated} />
 
 			// Forecast CRUD
-			<Route path="forecasts" component={ForecastIndex} onEnter={requireAuthentication} />
+			<Redirect from="forecasts" to={'forecasts/' + moment().utc().format('YYYY-MM-DD')} />
+			<Route path="forecasts/:date" component={ForecastIndex} onEnter={requireAuthentication} />
 
 			<Route path="*" component={NoMatch} />
 		</Route>

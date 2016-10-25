@@ -4,19 +4,19 @@ const initial = {
 
 export default (state = initial, action) => {
 	switch (action.type) {
-	case 'FORECAST_FETCH_ALL':
+	case 'FORECAST_FETCH':
 		return Object.assign({}, initial, {
 			loading: true,
 		})
-	case 'FORECAST_FETCH_ALL_FAIL':
+	case 'FORECAST_FETCH_FAIL':
 		return Object.assign({}, initial, {
 			loading: false,
 			err: action.err,
 		})
-	case 'FORECAST_FETCH_ALL_SUCCESS':
+	case 'FORECAST_FETCH_SUCCESS':
 		return Object.assign({}, initial, {
 			loading: false,
-			items: action.items,
+			item: action.item,
 		})
 	}
 
