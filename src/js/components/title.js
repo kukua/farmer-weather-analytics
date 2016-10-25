@@ -7,11 +7,11 @@ export default class Title extends React.Component {
 		var backButtonLabel = (this.props.backButtonLabel || 'Go back')
 
 		return (
-			<div>
+			<div className="title-container">
 				<h3>
 					{this.props.title}
 					{this.props.subTitle && (<small> - {this.props.subTitle}</small>)}
-					<div class="btn-group pull-right">
+					<div class="pull-right">
 						{backButton && backButtonLabel && ! this.props.loading &&
 							<a href="javascript:;" class="btn btn-sm btn-default icon-left-open-mini" onClick={hashHistory.goBack}>
 								{backButtonLabel}

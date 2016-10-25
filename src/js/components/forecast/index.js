@@ -57,21 +57,28 @@ class Index extends React.Component {
 		var isLoading = (this.props.isFetching)
 		var item = this.props.item
 		var date = moment(this.props.params.date, 'YYYY-MM-DD')
-		var isToday = isLoading || (item && date.isSame(moment(), 'day'))
+		var isToday = (item && date.isSame(moment(), 'day'))
 		var items = (item ? this.prepareForecasts(item.forecasts) : [])
-		var today = date.format('YYYY-MM-DD')
-		var yesterday = date.clone().subtract(1, 'day').format('YYYY-MM-DD')
-		var tomorrow = date.clone().add(1, 'day').format('YYYY-MM-DD')
+		var currentDay = date.format('YYYY-MM-DD')
+		var previousDay = date.clone().subtract(1, 'day').format('YYYY-MM-DD')
+		var today = moment().format('YYYY-MM-DD')
+		var nextDay = date.clone().add(1, 'day').format('YYYY-MM-DD')
 
 		return (
 				<div>
-				<Title title={'Forecasts for ' + today} backButton={false} />
-				<Link className="btn btn-default" to={'forecasts/' + yesterday}>
-					<i className="fa fa-chevron-left text-left" aria-hidden="true" />{yesterday}
-				</Link>
-				<Link className="btn btn-default pull-right" to={'forecasts/' + tomorrow}>
-					{tomorrow}<i className="fa fa-chevron-right text-right" aria-hidden="true" />
-				</Link>
+				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false}>
+					<Link className="btn btn-default btn-sm" to={'forecasts/' + today}>
+						<i className="fa fa-chevron-down text-left" aria-hidden="true" />today
+					</Link>
+					<div className="btn-group">
+						<Link className="btn btn-default btn-sm" to={'forecasts/' + previousDay}>
+							<i className="fa fa-chevron-left text-left" aria-hidden="true" />{previousDay}
+						</Link>
+						<Link className="btn btn-default btn-sm" disabled={date.isSameOrAfter(moment(), 'day')} to={'forecasts/' + nextDay}>
+							{nextDay}<i className="fa fa-chevron-right text-right" aria-hidden="true" />
+						</Link>
+					</div>
+				</Title>
 				<table class="table table-striped">
 					<thead>
 						<tr>
@@ -82,10 +89,7 @@ class Index extends React.Component {
 							<th>Wind speed</th>
 							<th>Wind direction</th>
 							<th>Humidity</th>
-							{isToday
-								? <th>Similar?</th>
-								: <th>Accurate?</th>
-							}
+							<th>Accurate?</th>
 						</tr>
 					</thead>
 					<tbody>
