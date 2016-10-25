@@ -56,7 +56,8 @@ class ForecastController extends BaseController {
 			->whereDate('date', '>=', $from->toDateString())
 			->whereDate('date', '<=', $to->toDateString())
 			->where('created_at', '=', DB::raw('(SELECT created_at FROM `' . $table . '` WHERE id = main.id ' .
-				'AND date = main.date ORDER BY created_at DESC LIMIT 1)'))
+				'AND date = main.date AND created_at <= "' . $date->copy()->endOfDay()->toDateString() . '" ' .
+				'ORDER BY created_at DESC LIMIT 1)'))
 			->groupBy('date')
 			->orderBy('date')
 			;
