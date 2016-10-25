@@ -15,9 +15,9 @@ body {
 	height: 60px;
 }
 
-[class^="icon-"]:before, [class*=" icon-"]:before {
-	margin-right: 9px;
+.fa.text-left {
+	margin-right: 10px;
 }
-[class^="icon-only"]:before, [class*=" icon-only"]:before {
-	margin-right: 0;
+.fa.text-right {
+	margin-left: 10px;
 }

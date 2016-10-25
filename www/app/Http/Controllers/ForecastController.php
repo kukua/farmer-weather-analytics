@@ -39,6 +39,12 @@ class ForecastController extends BaseController {
 		}
 
 		$table = $type;
+		$from = $date->copy()->startOfDay();
+		$to = $date->copy()->endOfDay();
+		if ($type === 'daily') {
+			$to->addDays(7);
+		}
+
 		$query = DB::connection('mysql-forecasts')
 			->table($table . ' AS main')
 			->select(DB::raw('
@@ -47,16 +53,13 @@ class ForecastController extends BaseController {
 				DATE_FORMAT(date, "%Y-%m-%dT%H:%i:%s+0000") as created_at
 			'))
 			->where('id', '=', $id)
-			->whereDate('date', '>=', $date->toDateString())
+			->whereDate('date', '>=', $from->toDateString())
+			->whereDate('date', '<=', $to->toDateString())
 			->where('created_at', '=', DB::raw('(SELECT created_at FROM `' . $table . '` WHERE id = main.id ' .
 				'AND date = main.date ORDER BY created_at DESC LIMIT 1)'))
 			->groupBy('date')
 			->orderBy('date')
 			;
-
-		if ($type === 'hourly') {
-			$query->whereDate('date', '<=', $date->copy()->endOfDay()->toDateString());
-		}
 
 		return $query->get();
 	}

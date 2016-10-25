@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router'
 import moment from 'moment'
 import _ from 'lodash'
 import Title from '../title'
@@ -55,12 +56,22 @@ class Index extends React.Component {
 	render () {
 		var isLoading = (this.props.isFetching)
 		var item = this.props.item
-		var isToday = isLoading || (item && moment(item.forecasts.date).isSame(moment(), 'day'))
+		var date = moment(this.props.params.date, 'YYYY-MM-DD')
+		var isToday = isLoading || (item && date.isSame(moment(), 'day'))
 		var items = (item ? this.prepareForecasts(item.forecasts) : [])
+		var today = date.format('YYYY-MM-DD')
+		var yesterday = date.clone().subtract(1, 'day').format('YYYY-MM-DD')
+		var tomorrow = date.clone().add(1, 'day').format('YYYY-MM-DD')
 
 		return (
-			<div>
-				<Title title="Forecasts" backButton={false} />
+				<div>
+				<Title title={'Forecasts for ' + today} backButton={false} />
+				<Link className="btn btn-default" to={'forecasts/' + yesterday}>
+					<i className="fa fa-chevron-left text-left" aria-hidden="true" />{yesterday}
+				</Link>
+				<Link className="btn btn-default pull-right" to={'forecasts/' + tomorrow}>
+					{tomorrow}<i className="fa fa-chevron-right text-right" aria-hidden="true" />
+				</Link>
 				<table class="table table-striped">
 					<thead>
 						<tr>
