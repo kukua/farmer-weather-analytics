@@ -34,7 +34,7 @@ class Menu extends React.Component {
 			return (
 				<div class="navbar-collapse collapse" id="navbar-main">
 					<ul class="nav navbar-nav">
-						<li class={isActive('forecasts') ? 'active' : ''}><Link to="forecasts">Forecasts</Link></li>
+						{/*<li class={isActive('forecasts') ? 'active' : ''}><Link to="forecasts">Forecasts</Link></li>*/}
 					</ul>
 					<ul class="nav navbar-nav pull-right">
 						<li class="dropdown">
