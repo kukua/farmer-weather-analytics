@@ -63,18 +63,20 @@ class Index extends React.Component {
 		var previousDay = date.clone().subtract(1, 'day').format('YYYY-MM-DD')
 		var today = moment().format('YYYY-MM-DD')
 		var nextDay = date.clone().add(1, 'day').format('YYYY-MM-DD')
+		var nextDayDisabled = date.isSameOrAfter(moment(), 'day')
 
 		return (
 				<div>
 				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false}>
-					<Link className="btn btn-default btn-sm" to={'forecasts/' + today}>
+					<Link className="btn btn-success btn-sm" to={'forecasts/' + today}>
 						<i className="fa fa-chevron-down text-left" aria-hidden="true" />today
 					</Link>
 					<div className="btn-group">
-						<Link className="btn btn-default btn-sm" to={'forecasts/' + previousDay}>
+						<Link className="btn btn-info btn-sm" to={'forecasts/' + previousDay}>
 							<i className="fa fa-chevron-left text-left" aria-hidden="true" />{previousDay}
 						</Link>
-						<Link className="btn btn-default btn-sm" disabled={date.isSameOrAfter(moment(), 'day')} to={'forecasts/' + nextDay}>
+						<Link className="btn btn-info btn-sm" to={'forecasts/' + nextDay}
+							disabled={nextDayDisabled} onClick={nextDayDisabled ? (ev) => ev.preventDefault() : null}>
 							{nextDay}<i className="fa fa-chevron-right text-right" aria-hidden="true" />
 						</Link>
 					</div>
@@ -89,7 +91,7 @@ class Index extends React.Component {
 							<th>Wind speed</th>
 							<th>Wind direction</th>
 							<th>Humidity</th>
-							<th>Accurate?</th>
+							<th className="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -105,7 +107,11 @@ class Index extends React.Component {
 										<td>{forecast.windSpeed} km/h</td>
 										<td>{forecast.windDir}</td>
 										<td>{forecast.humid ? `${forecast.humid} %` : ''}</td>
-										<td>
+										<td className="actions text-right">
+											<div className="btn-group">
+												<button className="btn btn-success btn-sm btn-wide" title="Yes"><i className="fa fa-check" aria-hidden="true"></i></button>
+												<button className="btn btn-danger btn-sm btn-wide" title="No"><i className="fa fa-close" aria-hidden="true"></i></button>
+											</div>
 										</td>
 									</tr>))
 								: <tr><td colSpan="8">No items…</td></tr>

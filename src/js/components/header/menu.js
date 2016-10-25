@@ -40,7 +40,7 @@ class Menu extends React.Component {
 						<li class="dropdown">
 							<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{user.get('name')} <span class="caret"></span></a>
 							<ul class="dropdown-menu">
-								<li><a href="javascript:;" onClick={this.onLogout.bind(this)}>Logout</a></li>
+								<li><a href="javascript:;" onClick={this.onLogout.bind(this)}>Sign out</a></li>
 							</ul>
 						</li>
 					</ul>

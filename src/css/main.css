@@ -25,3 +25,12 @@ body {
 .title-container .btn-group {
 	margin-left: 10px;
 }
+
+.table > tbody > tr > td.actions {
+	padding: 2px;
+}
+
+.btn-wide {
+	padding-left: 16px;
+	padding-right: 16px;
+}
