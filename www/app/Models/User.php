@@ -69,9 +69,4 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 	function getTokenAttribute () {
 		return $this->tokens()->first()->token;
 	}
-
-	// Cast attributes to correct types
-	function getIdAttribute ($val) { return (int) $val; }
-	function getIsActiveAttribute ($val) { return (bool) $val; }
-	function getIsAdminAttribute ($val) { return (bool) $val; }
 }

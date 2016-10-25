@@ -28,8 +28,4 @@ class UserToken extends Model {
 	function getUserIdsAttribute () {
 		return [(int) $this->user_id];
 	}
-
-	// Cast attributes to correct types
-	function getIdAttribute ($val) { return (int) $val; }
-	function getUserIdAttribute ($val) { return (int) $val; }
 }

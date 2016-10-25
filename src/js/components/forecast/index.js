@@ -1,10 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router'
 import moment from 'moment'
-import _ from 'lodash'
+import _ from 'underscore'
 import Title from '../title'
 import { connect } from 'react-redux'
+import { instance as user } from '../../lib/user'
 import actions from '../../actions/forecast'
+import userAccuracyVoteActions from '../../actions/userAccuracyVote'
 
 const formatType = (forecast) => {
 	return forecast.type.substr(0, 1).toUpperCase() + forecast.type.substr(1) // ucfirst
@@ -22,6 +24,12 @@ const mapDispatchToProps = (dispatch) => {
 	return {
 		onFetch (id, date) {
 			return dispatch(actions.fetchByLocationIdAndDate(id, date))
+		},
+		onCreateVote (data) {
+			return dispatch(userAccuracyVoteActions.create(data))
+		},
+		onUpdateVote (data) {
+			return dispatch(userAccuracyVoteActions.update(data))
 		},
 	}
 }
@@ -53,6 +61,31 @@ class Index extends React.Component {
 		return items
 	}
 
+	onVote (forecast, accurate) {
+		var vote
+
+		if (forecast.vote) {
+			vote = _.extend({}, forecast.vote, { accurate })
+			this.props.onUpdateVote(vote).then(() => {
+				forecast.vote.accurate = accurate
+				this.forceUpdate()
+			})
+		} else {
+			vote = {
+				user_id: user.id,
+				location_id: forecast.id,
+				type: forecast.type,
+				forecast_date: forecast.date,
+				forecast_created_at: forecast.created_at,
+				accurate,
+			}
+			this.props.onCreateVote(vote).then((item) => {
+				forecast.vote = item
+				this.forceUpdate()
+			})
+		}
+	}
+
 	render () {
 		var isLoading = (this.props.isFetching)
 		var item = this.props.item
@@ -69,7 +102,7 @@ class Index extends React.Component {
 				<div>
 				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false}>
 					<Link className="btn btn-success btn-sm" to={'forecasts/' + today}>
-						<i className="fa fa-chevron-down text-left" aria-hidden="true" />today
+						<i className="fa fa-chevron-down text-left" aria-hidden="true" />Today
 					</Link>
 					<div className="btn-group">
 						<Link className="btn btn-info btn-sm" to={'forecasts/' + previousDay}>
@@ -98,22 +131,32 @@ class Index extends React.Component {
 						{isLoading
 							? <tr><td colSpan="8">Loading…</td></tr>
 							: (items
-								? items.map((forecast, i) => (
-									<tr key={'' + i}>
-										<td>{formatType(forecast)}</td>
-										<td>{formatDate(forecast)}</td>
-										<td>{forecast.temp || `${forecast.tempLow}-${forecast.tempHigh}`} °C</td>
-										<td>{`${forecast.precip} mm` + (forecast.type === 'daily' ? ` (${forecast.precipChance}%)` : '')}</td>
-										<td>{forecast.windSpeed} km/h</td>
-										<td>{forecast.windDir}</td>
-										<td>{forecast.humid ? `${forecast.humid} %` : ''}</td>
-										<td className="actions text-right">
-											<div className="btn-group">
-												<button className="btn btn-success btn-sm btn-wide" title="Yes"><i className="fa fa-check" aria-hidden="true"></i></button>
-												<button className="btn btn-danger btn-sm btn-wide" title="No"><i className="fa fa-close" aria-hidden="true"></i></button>
-											</div>
-										</td>
-									</tr>))
+								? items.map((forecast, i) => {
+									var accurate = (forecast.vote ? forecast.vote.accurate : null)
+									return (
+										<tr key={'' + i}>
+											<td>{formatType(forecast)}</td>
+											<td>{formatDate(forecast)}</td>
+											<td>{forecast.temp || `${forecast.tempLow}-${forecast.tempHigh}`} °C</td>
+											<td>{`${forecast.precip} mm` + (forecast.type === 'daily' ? ` (${forecast.precipChance}%)` : '')}</td>
+											<td>{forecast.windSpeed} km/h</td>
+											<td>{forecast.windDir}</td>
+											<td>{forecast.humid ? `${forecast.humid} %` : ''}</td>
+											<td className="actions text-right">
+												<div className="btn-group">
+													<button className={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
+														disabled={accurate === true} onClick={() => this.onVote(forecast, true)}>
+														<i className="fa fa-check" aria-hidden="true"></i>
+													</button>
+													<button className={'btn btn-sm btn-wide ' + (accurate === false ? 'btn-danger' : 'btn-default')} title="No"
+														disabled={accurate === false} onClick={() => this.onVote(forecast, false)}>
+														<i className="fa fa-close" aria-hidden="true"></i>
+													</button>
+												</div>
+											</td>
+										</tr>
+									)
+								})
 								: <tr><td colSpan="8">No items…</td></tr>
 								)
 						}
@@ -137,6 +180,8 @@ Index.propTypes = {
 			hourly: React.PropTypes.array,
 		}),
 	}),
+	onCreateVote: React.PropTypes.func.isRequired,
+	onUpdateVote: React.PropTypes.func.isRequired,
 }
 Index.contextTypes = {
 	router: React.PropTypes.object.isRequired,

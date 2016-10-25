@@ -6,6 +6,7 @@ use Request;
 use DB;
 use Carbon\Carbon;
 use App\Models\Location;
+use App\Models\UserAccuracyVote;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -50,7 +51,7 @@ class ForecastController extends BaseController {
 			->select(DB::raw('
 				*,
 				DATE_FORMAT(date, "%Y-%m-%dT%H:%i:%s+0000") as date,
-				DATE_FORMAT(date, "%Y-%m-%dT%H:%i:%s+0000") as created_at
+				DATE_FORMAT(created_at, "%Y-%m-%dT%H:%i:%s+0000") as created_at
 			'))
 			->where('id', '=', $id)
 			->whereDate('date', '>=', $from->toDateString())
@@ -62,6 +63,16 @@ class ForecastController extends BaseController {
 			->orderBy('date')
 			;
 
-		return $query->get();
+		$forecasts = $query->get();
+
+		foreach ($forecasts as & $forecast) {
+			$forecast->vote = UserAccuracyVote::byType($type)
+				->byForecast($forecast)
+				->select(['id', 'accurate'])
+				->first()
+				;
+		}
+
+		return $forecasts;
 	}
 }
