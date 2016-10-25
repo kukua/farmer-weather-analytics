@@ -1,5 +1,5 @@
 {
-  "name": "farmer-analytis",
+  "name": "farmer-weather-analytis",
   "version": "0.1.0",
   "description": "Show forecast to farmers and allow them to provide us with feedback.",
   "private": true,
@@ -10,14 +10,14 @@
   "pre-commit": "lint",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kukua/farmer-analytics.git"
+    "url": "git+https://github.com/kukua/farmer-weather-analytics.git"
   },
   "author": "Kukua Team <dev@kukua.cc>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kukua/farmer-analytics/issues"
+    "url": "https://github.com/kukua/farmer-weather-analytics/issues"
   },
-  "homepage": "https://github.com/kukua/farmer-analytics#readme",
+  "homepage": "https://github.com/kukua/farmer-weather-analytics#readme",
   "dependencies": {
     "es6-object-assign": "^1.0.2",
     "js-cookie": "^2.1.2",
