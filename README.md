@@ -17,6 +17,11 @@ docker-compose run --rm --entrypoint=composer lumen install
 docker-compose run --rm --entrypoint=php lumen artisan migrate
 sudo chown -R $USER:$USER .
 
+sudo npm install -g grunt-cli
+npm install
+grunt build
+# TODO: Move to Docker container
+
 # Update autoloader
 docker-compose run --rm --entrypoint=composer lumen dumpautoload
 

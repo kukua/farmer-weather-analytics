@@ -32,6 +32,11 @@ class UserController extends Controller {
 
 		// Login as newly created user, to update it
 		Auth::login($model);
+		//
+		// Update active and last_login columns
+		if (config('user.active_by_default')) {
+			$model->is_active = true;
+		}
 
 		$model->touchLastLogin(false);
 		$model->save();
