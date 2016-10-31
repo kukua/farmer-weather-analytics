@@ -33,6 +33,9 @@ class Login extends React.Component {
 		return (
 			<div class="row">
 				<div class="col-sm-offset-2 col-sm-8">
+					<div class="alert alert-info" role="alert">
+						<b>New here?</b> Welcome! In order to login you need to register first. Please click on the register button and create your account.
+					</div>
 					<Title title="Login" backButton={false} />
 					<form class="form form-horizontal" method="POST" onSubmit={this.onSubmit.bind(this)}>
 						<div class="form-group">
@@ -50,8 +53,8 @@ class Login extends React.Component {
 						<div class="form-group">
 							<label class="col-sm-offset-1 col-sm-3 control-label"></label>
 							<div class="col-sm-6">
-								<button type="submit" class="btn btn-success pull-left" disabled={this.props.isFetching}>Login</button>
-								<Link to="/users/register" class="btn btn-link pull-right">Register</Link>
+								<Link to="/users/register" class="btn btn-primary pull-left">Register</Link>
+								<button type="submit" class="btn btn-success pull-right" disabled={this.props.isFetching}><i class="fa fa-chevron-right text-left" />Login</button>
 							</div>
 						</div>
 					</form>

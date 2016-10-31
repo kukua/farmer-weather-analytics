@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import moment from 'moment'
 import _ from 'underscore'
 import Title from '../title'
+import Tooltip from '../tooltip'
 import { connect } from 'react-redux'
 import { instance as user } from '../../lib/user'
 import actions from '../../actions/forecast'
@@ -92,8 +93,13 @@ class Index extends React.Component {
 		return settings[key].value
 	}
 	onSettingChange (ev) {
+		this.changeSetting(ev.target.name, ev.target.value ? 1 : 0)
+	}
+	onAlertClose () {
+		this.changeSetting('forecast_help', 0)
+	}
+	changeSetting (key, value) {
 		var settings = user.get('settings')
-		var key = ev.target.name
 
 		if ( ! _.isObject(settings)) {
 			settings = {}
@@ -101,7 +107,7 @@ class Index extends React.Component {
 
 		var item = settings[key] || {}
 		item.key = key
-		item.value = (ev.target.checked ? 1 : 0)
+		item.value = value
 		settings[key] = item
 
 		user.set('settings', settings)
@@ -122,6 +128,7 @@ class Index extends React.Component {
 		var nextDay = date.clone().add(1, 'day').format('YYYY-MM-DD')
 		var nextDayDisabled = date.isSameOrAfter(moment(), 'day')
 
+		var showHelp          = (this.getSettingValue('forecast_help')           !== 0)
 		var showDaily         = (this.getSettingValue('forecast_daily')          !== 0)
 		var showHourly        = (this.getSettingValue('forecast_hourly')         !== 0)
 		var showTemperature   = (this.getSettingValue('forecast_temperature')    !== 0)
@@ -132,8 +139,37 @@ class Index extends React.Component {
 
 		var baseColSpan = (showTemperature + showPrecipitation + showWindSpeed + showWindDirection)
 
+		var similarHeader = (
+			<th class="text-right">
+				{isToday ? 'Similar?' : 'Accurate?'}
+				<Tooltip title={isToday
+					? 'If other local weather forecasts were similar, please click the check mark next to that specific forecast. Otherwise click on the cross.'
+					: 'If the weather forecast proved to be accurate, please click the check mark next to that specific forecast. Otherwise click on the cross.'
+				} />
+			</th>
+		)
+
 		return (
 			<div class="forecast-index">
+				{showHelp && (
+					<div class="alert alert-info">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close" onClick={this.onAlertClose.bind(this)}>
+							<span aria-hidden="true">×</span>
+						</button>
+						<p>
+							This overview shows the daily forecasts for the upcoming 7 days.
+							It also shows hourly forecasts for today and previous days.
+							By clicking on the buttons in the top right you can navigate between days of forecasts.
+							Note that the forecast date is in the title ("Forecasts for ...").
+							This means these forecasts are made on that date.
+							Please help us by providing feedback on the forecast by clicking on the check mark
+							if it was similar to your local forecaster (for today's forecast) and on the cross if it was not.
+							When viewing older forecasts please indicate using the check or cross if the forecast was accurate, compared to the actual weather.
+							Thank you!
+						</p>
+						<p><b>– The Kukua Team</b></p>
+					</div>
+				)}
 				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false} controlsClass="controls">
 					<Link class="btn btn-primary btn-sm" to={'forecasts/' + today}
 						disabled={isToday} onClick={isToday ? (ev) => ev.preventDefault() : null}>
@@ -150,6 +186,7 @@ class Index extends React.Component {
 					</div>
 				</Title>
 				<div class="settings form-inline">
+					<Tooltip placement="left" title="Use these checkboxes to toggle daily/hourly forecasts and table columns." />
 					<div class="checkbox">
 						<label><input type="checkbox" name="forecast_daily" checked={showDaily} onChange={this.onSettingChange.bind(this)} /> Daily</label>
 					</div>
@@ -184,7 +221,7 @@ class Index extends React.Component {
 									{showPrecipitation && <th>Precipitation</th>}
 									{showWindSpeed && <th>Wind speed</th>}
 									{showWindDirection && <th>Wind direction</th>}
-									<th class="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
+									{similarHeader}
 								</tr>
 							</thead>
 							<tbody>
@@ -196,7 +233,7 @@ class Index extends React.Component {
 											return (
 												<tr key={'' + i}>
 													<td>{formatDate(forecast)}</td>
-													{showTemperature && <td>{`${forecast.tempLow}-${forecast.tempHigh}`} °C</td>}
+													{showTemperature && <td>{`${forecast.tempLow} - ${forecast.tempHigh}`} °C</td>}
 													{showPrecipitation && <td>{`${forecast.precip} mm (${forecast.precipChance}%)`}</td>}
 													{showWindSpeed && <td>{forecast.windSpeed} km/h</td>}
 													{showWindDirection && <td>{forecast.windDir}</td>}
@@ -239,7 +276,7 @@ class Index extends React.Component {
 									{showWindSpeed && <th>Wind speed</th>}
 									{showWindDirection && <th>Wind direction</th>}
 									{showHumidity && <th>Humidity</th>}
-									<th class="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
+									{similarHeader}
 								</tr>
 							</thead>
 							<tbody>

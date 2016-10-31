@@ -87,7 +87,7 @@ class Register extends React.Component {
 						<div class="form-group">
 							<label class="col-sm-offset-1 col-sm-3 control-label"></label>
 							<div class="col-sm-6">
-								<button type="submit" class="btn btn-success pull-left" disabled={isLoading}>Register</button>
+								<button type="submit" class="btn btn-success pull-right" disabled={isLoading}><i class="fa fa-chevron-right text-left" />Register</button>
 							</div>
 						</div>
 					</form>
