@@ -8,11 +8,10 @@ import { instance as user } from '../../lib/user'
 import actions from '../../actions/forecast'
 import userAccuracyVoteActions from '../../actions/userAccuracyVote'
 
-const formatType = (forecast) => {
-	return forecast.type.substr(0, 1).toUpperCase() + forecast.type.substr(1) // ucfirst
-}
 const formatDate = (forecast) => {
-	return moment(forecast.date).utc().format('YYYY-MM-DD' + (forecast.type === 'hourly' ? ' HH:mm' : ''))
+	var date = moment(forecast.date)
+	return date.utc().format('YYYY-MM-DD' + (forecast.type === 'hourly' ? ' HH:mm' : ''))
+		+ (date.isSame(moment(), 'day') ? ' (today)' : '')
 }
 
 const mapStateToProps = (state) => {
@@ -53,12 +52,7 @@ class Index extends React.Component {
 		var daily  = _.map(forecasts.daily , (item) => { item.type = 'daily'; return item })
 		var hourly = _.map(forecasts.hourly, (item) => { item.type = 'hourly'; return item })
 
-		// Zip
-		var items = daily.splice(0, 1)
-		items = items.concat(hourly)
-		items = items.concat(daily)
-
-		return items
+		return { daily, hourly }
 	}
 
 	onVote (forecast, accurate) {
@@ -91,7 +85,7 @@ class Index extends React.Component {
 		var item = this.props.item
 		var date = moment(this.props.params.date, 'YYYY-MM-DD')
 		var isToday = (item && date.isSame(moment(), 'day'))
-		var items = (item ? this.prepareForecasts(item.forecasts) : [])
+		var { daily, hourly } = (item ? this.prepareForecasts(item.forecasts) : [])
 		var currentDay = date.format('YYYY-MM-DD')
 		var previousDay = date.clone().subtract(1, 'day').format('YYYY-MM-DD')
 		var today = moment().format('YYYY-MM-DD')
@@ -101,14 +95,14 @@ class Index extends React.Component {
 		return (
 				<div>
 				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false}>
-					<Link className="btn btn-success btn-sm" to={'forecasts/' + today}>
-						<i className="fa fa-chevron-down text-left" aria-hidden="true" />Today
+					<Link className="btn btn-primary btn-sm" to={'forecasts/' + today}>
+						<i className="fa fa-chevron-down text-left" aria-hidden="true" />Go to today
 					</Link>
 					<div className="btn-group">
-						<Link className="btn btn-info btn-sm" to={'forecasts/' + previousDay}>
+						<Link className="btn btn-primary btn-sm" to={'forecasts/' + previousDay}>
 							<i className="fa fa-chevron-left text-left" aria-hidden="true" />{previousDay}
 						</Link>
-						<Link className="btn btn-info btn-sm" to={'forecasts/' + nextDay}
+						<Link className="btn btn-primary btn-sm" to={'forecasts/' + nextDay}
 							disabled={nextDayDisabled} onClick={nextDayDisabled ? (ev) => ev.preventDefault() : null}>
 							{nextDay}<i className="fa fa-chevron-right text-right" aria-hidden="true" />
 						</Link>
@@ -117,31 +111,27 @@ class Index extends React.Component {
 				<table class="table table-striped">
 					<thead>
 						<tr>
-							<th>Type</th>
 							<th>Date</th>
 							<th>Temperature</th>
 							<th>Precipitation</th>
 							<th>Wind speed</th>
 							<th>Wind direction</th>
-							<th>Humidity</th>
 							<th className="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
 						</tr>
 					</thead>
 					<tbody>
 						{isLoading
-							? <tr><td colSpan="8">Loading…</td></tr>
-							: (items
-								? items.map((forecast, i) => {
+							? <tr><td colSpan="6">Loading…</td></tr>
+							: (daily
+								? daily.map((forecast, i) => {
 									var accurate = (forecast.vote ? forecast.vote.accurate : null)
 									return (
 										<tr key={'' + i}>
-											<td>{formatType(forecast)}</td>
 											<td>{formatDate(forecast)}</td>
-											<td>{forecast.temp || `${forecast.tempLow}-${forecast.tempHigh}`} °C</td>
-											<td>{`${forecast.precip} mm` + (forecast.type === 'daily' ? ` (${forecast.precipChance}%)` : '')}</td>
+											<td>{`${forecast.tempLow}-${forecast.tempHigh}`} °C</td>
+											<td>{`${forecast.precip} mm (${forecast.precipChance}%)`}</td>
 											<td>{forecast.windSpeed} km/h</td>
 											<td>{forecast.windDir}</td>
-											<td>{forecast.humid ? `${forecast.humid} %` : ''}</td>
 											<td className="actions text-right">
 												<div className="btn-group">
 													<button className={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
@@ -157,7 +147,55 @@ class Index extends React.Component {
 										</tr>
 									)
 								})
-								: <tr><td colSpan="8">No items…</td></tr>
+								: <tr><td colSpan="6">No forecasts available…</td></tr>
+								)
+						}
+					</tbody>
+				</table>
+				<br />
+				<Title title="Hourly" backButton={false} />
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Date and time</th>
+							<th>Temperature</th>
+							<th>Precipitation</th>
+							<th>Wind speed</th>
+							<th>Wind direction</th>
+							<th>Humidity</th>
+							<th className="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{isLoading
+							? <tr><td colSpan="7">Loading…</td></tr>
+							: (hourly
+								? hourly.map((forecast, i) => {
+									var accurate = (forecast.vote ? forecast.vote.accurate : null)
+									return (
+										<tr key={'' + i}>
+											<td>{formatDate(forecast)}</td>
+											<td>{forecast.temp} °C</td>
+											<td>{`${forecast.precip} mm`}</td>
+											<td>{forecast.windSpeed} km/h</td>
+											<td>{forecast.windDir}</td>
+											<td>{forecast.humid} %</td>
+											<td className="actions text-right">
+												<div className="btn-group">
+													<button className={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
+														disabled={accurate === true} onClick={() => this.onVote(forecast, true)}>
+														<i className="fa fa-check" aria-hidden="true"></i>
+													</button>
+													<button className={'btn btn-sm btn-wide ' + (accurate === false ? 'btn-danger' : 'btn-default')} title="No"
+														disabled={accurate === false} onClick={() => this.onVote(forecast, false)}>
+														<i className="fa fa-close" aria-hidden="true"></i>
+													</button>
+												</div>
+											</td>
+										</tr>
+									)
+								})
+								: <tr><td colSpan="7">No forecasts available…</td></tr>
 								)
 						}
 					</tbody>
