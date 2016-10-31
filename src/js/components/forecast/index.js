@@ -7,11 +7,12 @@ import { connect } from 'react-redux'
 import { instance as user } from '../../lib/user'
 import actions from '../../actions/forecast'
 import userAccuracyVoteActions from '../../actions/userAccuracyVote'
+import userActions from '../../actions/user'
 
 const formatDate = (forecast) => {
 	var date = moment(forecast.date)
 	return date.utc().format('YYYY-MM-DD' + (forecast.type === 'hourly' ? ' HH:mm' : ''))
-		+ (date.isSame(moment(), 'day') ? ' (today)' : '')
+		+ (forecast.type === 'daily' && date.isSame(moment(), 'day') ? ' (today)' : '')
 }
 
 const mapStateToProps = (state) => {
@@ -29,6 +30,9 @@ const mapDispatchToProps = (dispatch) => {
 		},
 		onUpdateVote (data) {
 			return dispatch(userAccuracyVoteActions.update(data))
+		},
+		onUpdateUser (data) {
+			return dispatch(userActions.update(data))
 		},
 	}
 }
@@ -80,6 +84,32 @@ class Index extends React.Component {
 		}
 	}
 
+	getSettingValue (key) {
+		var settings = user.get('settings')
+
+		if ( ! _.isObject(settings) || ! settings[key]) return
+
+		return settings[key].value
+	}
+	onSettingChange (ev) {
+		var settings = user.get('settings')
+		var key = ev.target.name
+
+		if ( ! _.isObject(settings)) {
+			settings = {}
+		}
+
+		var item = settings[key] || {}
+		item.key = key
+		item.value = (ev.target.checked ? 1 : 0)
+		settings[key] = item
+
+		user.set('settings', settings)
+
+		this.props.onUpdateUser(user.get())
+			.then(() => this.forceUpdate())
+	}
+
 	render () {
 		var isLoading = (this.props.isFetching)
 		var item = this.props.item
@@ -92,114 +122,162 @@ class Index extends React.Component {
 		var nextDay = date.clone().add(1, 'day').format('YYYY-MM-DD')
 		var nextDayDisabled = date.isSameOrAfter(moment(), 'day')
 
+		var showDaily         = (this.getSettingValue('forecast_daily')          !== 0)
+		var showHourly        = (this.getSettingValue('forecast_hourly')         !== 0)
+		var showTemperature   = (this.getSettingValue('forecast_temperature')    !== 0)
+		var showPrecipitation = (this.getSettingValue('forecast_precipitation')  !== 0)
+		var showWindSpeed     = (this.getSettingValue('forecast_wind_speed')     !== 0)
+		var showWindDirection = (this.getSettingValue('forecast_wind_direction') !== 0)
+		var showHumidity      = (this.getSettingValue('forecast_humidity')       !== 0)
+
+		var baseColSpan = (showTemperature + showPrecipitation + showWindSpeed + showWindDirection)
+
 		return (
-				<div>
+			<div class="forecast-index">
 				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false}>
-					<Link className="btn btn-primary btn-sm" to={'forecasts/' + today}>
-						<i className="fa fa-chevron-down text-left" aria-hidden="true" />Go to today
+					<Link class="btn btn-primary btn-sm" to={'forecasts/' + today}
+						disabled={isToday} onClick={isToday ? (ev) => ev.preventDefault() : null}>
+						<i class="fa fa-chevron-down text-left" aria-hidden="true" />Go to today
 					</Link>
-					<div className="btn-group">
-						<Link className="btn btn-primary btn-sm" to={'forecasts/' + previousDay}>
-							<i className="fa fa-chevron-left text-left" aria-hidden="true" />{previousDay}
+					<div class="btn-group">
+						<Link class="btn btn-primary btn-sm" to={'forecasts/' + previousDay}>
+							<i class="fa fa-chevron-left text-left" aria-hidden="true" />{previousDay}
 						</Link>
-						<Link className="btn btn-primary btn-sm" to={'forecasts/' + nextDay}
+						<Link class="btn btn-primary btn-sm" to={'forecasts/' + nextDay}
 							disabled={nextDayDisabled} onClick={nextDayDisabled ? (ev) => ev.preventDefault() : null}>
-							{nextDay}<i className="fa fa-chevron-right text-right" aria-hidden="true" />
+							{nextDay}<i class="fa fa-chevron-right text-right" aria-hidden="true" />
 						</Link>
 					</div>
 				</Title>
-				<table class="table table-striped">
-					<thead>
-						<tr>
-							<th>Date</th>
-							<th>Temperature</th>
-							<th>Precipitation</th>
-							<th>Wind speed</th>
-							<th>Wind direction</th>
-							<th className="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
-						</tr>
-					</thead>
-					<tbody>
-						{isLoading
-							? <tr><td colSpan="6">Loading…</td></tr>
-							: (daily
-								? daily.map((forecast, i) => {
-									var accurate = (forecast.vote ? forecast.vote.accurate : null)
-									return (
-										<tr key={'' + i}>
-											<td>{formatDate(forecast)}</td>
-											<td>{`${forecast.tempLow}-${forecast.tempHigh}`} °C</td>
-											<td>{`${forecast.precip} mm (${forecast.precipChance}%)`}</td>
-											<td>{forecast.windSpeed} km/h</td>
-											<td>{forecast.windDir}</td>
-											<td className="actions text-right">
-												<div className="btn-group">
-													<button className={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
-														disabled={accurate === true} onClick={() => this.onVote(forecast, true)}>
-														<i className="fa fa-check" aria-hidden="true"></i>
-													</button>
-													<button className={'btn btn-sm btn-wide ' + (accurate === false ? 'btn-danger' : 'btn-default')} title="No"
-														disabled={accurate === false} onClick={() => this.onVote(forecast, false)}>
-														<i className="fa fa-close" aria-hidden="true"></i>
-													</button>
-												</div>
-											</td>
-										</tr>
-									)
-								})
-								: <tr><td colSpan="6">No forecasts available…</td></tr>
-								)
-						}
-					</tbody>
-				</table>
-				<br />
-				<Title title="Hourly" backButton={false} />
-				<table class="table table-striped">
-					<thead>
-						<tr>
-							<th>Date and time</th>
-							<th>Temperature</th>
-							<th>Precipitation</th>
-							<th>Wind speed</th>
-							<th>Wind direction</th>
-							<th>Humidity</th>
-							<th className="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
-						</tr>
-					</thead>
-					<tbody>
-						{isLoading
-							? <tr><td colSpan="7">Loading…</td></tr>
-							: (hourly
-								? hourly.map((forecast, i) => {
-									var accurate = (forecast.vote ? forecast.vote.accurate : null)
-									return (
-										<tr key={'' + i}>
-											<td>{formatDate(forecast)}</td>
-											<td>{forecast.temp} °C</td>
-											<td>{`${forecast.precip} mm`}</td>
-											<td>{forecast.windSpeed} km/h</td>
-											<td>{forecast.windDir}</td>
-											<td>{forecast.humid} %</td>
-											<td className="actions text-right">
-												<div className="btn-group">
-													<button className={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
-														disabled={accurate === true} onClick={() => this.onVote(forecast, true)}>
-														<i className="fa fa-check" aria-hidden="true"></i>
-													</button>
-													<button className={'btn btn-sm btn-wide ' + (accurate === false ? 'btn-danger' : 'btn-default')} title="No"
-														disabled={accurate === false} onClick={() => this.onVote(forecast, false)}>
-														<i className="fa fa-close" aria-hidden="true"></i>
-													</button>
-												</div>
-											</td>
-										</tr>
-									)
-								})
-								: <tr><td colSpan="7">No forecasts available…</td></tr>
-								)
-						}
-					</tbody>
-				</table>
+				<div class="settings form-inline">
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_daily" checked={showDaily} onChange={this.onSettingChange.bind(this)} /> Daily</label>
+					</div>
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_hourly" checked={showHourly} onChange={this.onSettingChange.bind(this)} /> Hourly</label>
+					</div>
+
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_temperature" checked={showTemperature} onChange={this.onSettingChange.bind(this)} /> Temperature</label>
+					</div>
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_precipitation" checked={showPrecipitation} onChange={this.onSettingChange.bind(this)} /> Precipitation</label>
+					</div>
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_wind_speed" checked={showWindSpeed} onChange={this.onSettingChange.bind(this)} /> Wind speed</label>
+					</div>
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_wind_direction" checked={showWindDirection} onChange={this.onSettingChange.bind(this)} /> Wind direction</label>
+					</div>
+					<div class="checkbox">
+						<label><input type="checkbox" name="forecast_humidity" checked={showHumidity} onChange={this.onSettingChange.bind(this)} /> Humidity</label>
+					</div>
+				</div>
+				<hr />
+				{showDaily && (
+					<div>
+						<table class="table table-striped">
+							<thead>
+								<tr>
+									<th>Date</th>
+									{showTemperature && <th>Temperature</th>}
+									{showPrecipitation && <th>Precipitation</th>}
+									{showWindSpeed && <th>Wind speed</th>}
+									{showWindDirection && <th>Wind direction</th>}
+									<th class="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{isLoading
+									? <tr><td colSpan={baseColSpan + 2}>Loading…</td></tr>
+									: (daily
+										? daily.map((forecast, i) => {
+											var accurate = (forecast.vote ? forecast.vote.accurate : null)
+											return (
+												<tr key={'' + i}>
+													<td>{formatDate(forecast)}</td>
+													{showTemperature && <td>{`${forecast.tempLow}-${forecast.tempHigh}`} °C</td>}
+													{showPrecipitation && <td>{`${forecast.precip} mm (${forecast.precipChance}%)`}</td>}
+													{showWindSpeed && <td>{forecast.windSpeed} km/h</td>}
+													{showWindDirection && <td>{forecast.windDir}</td>}
+													<td class="actions text-right">
+														<div class="btn-group">
+															<button class={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
+																disabled={accurate === true} onClick={() => this.onVote(forecast, true)}>
+																<i class="fa fa-check" aria-hidden="true"></i>
+															</button>
+															<button class={'btn btn-sm btn-wide ' + (accurate === false ? 'btn-danger' : 'btn-default')} title="No"
+																disabled={accurate === false} onClick={() => this.onVote(forecast, false)}>
+																<i class="fa fa-close" aria-hidden="true"></i>
+															</button>
+														</div>
+													</td>
+												</tr>
+											)
+										})
+										: <tr><td colSpan={baseColSpan + 2}>No forecasts available…</td></tr>
+										)
+								}
+							</tbody>
+						</table>
+					</div>
+				)}
+				{showHourly && (
+					<div>
+						{showDaily && (
+							<div>
+								<br />
+								<Title title="Hourly" backButton={false} />
+							</div>
+						)}
+						<table class="table table-striped">
+							<thead>
+								<tr>
+									<th>Date and time</th>
+									{showTemperature && <th>Temperature</th>}
+									{showPrecipitation && <th>Precipitation</th>}
+									{showWindSpeed && <th>Wind speed</th>}
+									{showWindDirection && <th>Wind direction</th>}
+									{showHumidity && <th>Humidity</th>}
+									<th class="text-right">{isToday ? 'Similar?' : 'Accurate?'}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{isLoading
+									? <tr><td colSpan={baseColSpan + 2 + showHumidity}>Loading…</td></tr>
+									: (hourly
+										? hourly.map((forecast, i) => {
+											var accurate = (forecast.vote ? forecast.vote.accurate : null)
+											return (
+												<tr key={'' + i}>
+													<td>{formatDate(forecast)}</td>
+													{showTemperature && <td>{forecast.temp} °C</td>}
+													{showPrecipitation && <td>{`${forecast.precip} mm`}</td>}
+													{showWindSpeed && <td>{forecast.windSpeed} km/h</td>}
+													{showWindDirection && <td>{forecast.windDir}</td>}
+													{showHumidity && <td>{forecast.humid} %</td>}
+													<td class="actions text-right">
+														<div class="btn-group">
+															<button class={'btn btn-sm btn-wide ' + (accurate === true ? 'btn-success' : 'btn-default')} title="Yes"
+																disabled={accurate === true} onClick={() => this.onVote(forecast, true)}>
+																<i class="fa fa-check" aria-hidden="true"></i>
+															</button>
+															<button class={'btn btn-sm btn-wide ' + (accurate === false ? 'btn-danger' : 'btn-default')} title="No"
+																disabled={accurate === false} onClick={() => this.onVote(forecast, false)}>
+																<i class="fa fa-close" aria-hidden="true"></i>
+															</button>
+														</div>
+													</td>
+												</tr>
+											)
+										})
+										: <tr><td colSpan={baseColSpan + 2 + showHumidity}>No forecasts available…</td></tr>
+										)
+								}
+							</tbody>
+						</table>
+					</div>
+				)}
 			</div>
 		)
 	}
@@ -220,6 +298,7 @@ Index.propTypes = {
 	}),
 	onCreateVote: React.PropTypes.func.isRequired,
 	onUpdateVote: React.PropTypes.func.isRequired,
+	onUpdateUser: React.PropTypes.func.isRequired,
 }
 Index.contextTypes = {
 	router: React.PropTypes.object.isRequired,

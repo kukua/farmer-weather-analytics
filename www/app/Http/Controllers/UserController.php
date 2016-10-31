@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Request;
 use Model;
 use Auth;
 use QueryException;
@@ -56,6 +57,25 @@ class UserController extends Controller {
 		$user = Auth::user();
 		$user->touchLastLogin();
 
+		$this->addIncludes($user);
+
 		return $user;
+	}
+
+	function update ($id) {
+		$model = $response = parent::update($id);
+
+		if ( ! ($model instanceof Model)) {
+			return $response;
+		}
+
+		// Settings
+		if (Request::has('settings')) {
+			$model->updateSettings((array) Request::input('settings'));
+		}
+
+		$this->addIncludes($model);
+
+		return $model;
 	}
 }

@@ -26,7 +26,7 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 	protected $hidden = ['password', 'remember_token'];
 	protected $appends = ['token'];
 	public $timestamps = true;
-	public $relationships = ['devices', 'templates', 'tokens'];
+	public $relationships = ['devices', 'templates', 'tokens', 'settings'];
 	public $guardCreate = false;
 
 	static function findByToken ($token) {
@@ -53,6 +53,10 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 		return $this->hasMany(UserToken::class);
 	}
 
+	function settings () {
+		return $this->hasMany(UserSetting::class);
+	}
+
 	function touchLastLogin ($save = true) {
 		$this->last_login = new DateTime;
 		if ($save) $this->save();
@@ -68,5 +72,51 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 
 	function getTokenAttribute () {
 		return $this->tokens()->first()->token;
+	}
+
+	function updateSettings (array $settings) {
+		foreach ($settings as & $setting) {
+			if ( ! is_array($setting) || empty($setting['key'])) {
+				continue;
+			}
+
+			$key   = & $setting['key'];
+			$value = & $setting['value'];
+
+			if ( ! is_null($value)) {
+				// Update or create
+				$item = UserSetting::byUser($this)->withKey($key)->first();
+
+				if ($item) {
+					$item->value = $value;
+					$item->save();
+				} else {
+					UserSetting::create([
+						'user_id' => $this->id,
+						'key' => $key,
+						'value' => $value,
+					]);
+				}
+			} else {
+				// Delete the ones with value = NULL
+				UserSetting::byUser($this)->withKey($key)->delete();
+			}
+		}
+	}
+
+	function toArray () {
+		$values = parent::toArray();
+
+		if ( ! empty($values['settings'])) {
+			$settings = [];
+
+			foreach ($values['settings'] as & $setting) {
+				$settings[$setting['key']] = & $setting;
+			}
+
+			$values['settings'] = & $settings;
+		}
+
+		return $values;
 	}
 }
