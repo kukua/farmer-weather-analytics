@@ -5,13 +5,14 @@ export default class Title extends React.Component {
 	render () {
 		var backButton = (this.props.backButton !== false)
 		var backButtonLabel = (this.props.backButtonLabel || 'Go back')
+		var controlsClass = (this.props.controlsClass !== undefined ? this.props.controlsClass : 'pull-right')
 
 		return (
 			<div className="title-container">
 				<h3>
 					{this.props.title}
 					{this.props.subTitle && (<small> - {this.props.subTitle}</small>)}
-					<div class="pull-right">
+					<div class={controlsClass}>
 						{backButton && backButtonLabel && ! this.props.loading &&
 							<a href="javascript:;" class="btn btn-sm btn-default icon-left-open-mini" onClick={hashHistory.goBack}>
 								{backButtonLabel}
@@ -37,4 +38,5 @@ Title.propTypes = {
 		React.PropTypes.arrayOf(React.PropTypes.node),
 		React.PropTypes.node
 	]),
+	controlsClass: React.PropTypes.string,
 }

@@ -28,7 +28,7 @@ body {
 
 .table > tbody > tr > td.actions {
 	padding: 2px;
-	width: 100px;
+	min-width: 100px;
 }
 
 .btn-wide {
@@ -38,4 +38,16 @@ body {
 
 .forecast-index .settings .checkbox {
 	padding-right: 16px;
+}
+.forecast-index .table td {
+	min-width: 120px;
+}
+.forecast-index .controls {
+	float: right;
+}
+@media (max-width: 768px) {
+	.forecast-index .controls {
+		float: none;
+		margin-top: 16px;
+	}
 }

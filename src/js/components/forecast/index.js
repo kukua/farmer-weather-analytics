@@ -134,7 +134,7 @@ class Index extends React.Component {
 
 		return (
 			<div class="forecast-index">
-				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false}>
+				<Title title={'Forecasts for ' + currentDay + (isToday ? ' (today)' : '')} backButton={false} controlsClass="controls">
 					<Link class="btn btn-primary btn-sm" to={'forecasts/' + today}
 						disabled={isToday} onClick={isToday ? (ev) => ev.preventDefault() : null}>
 						<i class="fa fa-chevron-down text-left" aria-hidden="true" />Go to today
