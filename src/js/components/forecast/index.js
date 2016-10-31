@@ -60,6 +60,37 @@ class Index extends React.Component {
 		return { daily, hourly }
 	}
 
+	getSettingValue (key) {
+		var settings = user.get('settings')
+
+		if ( ! _.isObject(settings) || ! settings[key]) return
+
+		return settings[key].value
+	}
+	onAlertClose () {
+		this.changeSetting('forecast_help', 0)
+	}
+	onSettingChange (ev) {
+		this.changeSetting(ev.target.name, ev.target.checked ? 1 : 0)
+	}
+	changeSetting (key, value) {
+		var settings = user.get('settings')
+
+		if ( ! _.isObject(settings) || _.isArray(settings)) {
+			settings = {}
+		}
+
+		var item = settings[key] || {}
+		item.key = key
+		item.value = value
+		settings[key] = item
+
+		user.set('settings', settings)
+
+		this.props.onUpdateUser(user.get())
+			.then(() => this.forceUpdate())
+	}
+
 	onVote (forecast, accurate) {
 		var vote
 
@@ -83,37 +114,6 @@ class Index extends React.Component {
 				this.forceUpdate()
 			})
 		}
-	}
-
-	getSettingValue (key) {
-		var settings = user.get('settings')
-
-		if ( ! _.isObject(settings) || ! settings[key]) return
-
-		return settings[key].value
-	}
-	onSettingChange (ev) {
-		this.changeSetting(ev.target.name, ev.target.value ? 1 : 0)
-	}
-	onAlertClose () {
-		this.changeSetting('forecast_help', 0)
-	}
-	changeSetting (key, value) {
-		var settings = user.get('settings')
-
-		if ( ! _.isObject(settings)) {
-			settings = {}
-		}
-
-		var item = settings[key] || {}
-		item.key = key
-		item.value = value
-		settings[key] = item
-
-		user.set('settings', settings)
-
-		this.props.onUpdateUser(user.get())
-			.then(() => this.forceUpdate())
 	}
 
 	render () {
