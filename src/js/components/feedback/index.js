@@ -51,7 +51,7 @@ class Index extends React.Component {
 		var key = 'feedback_' + moment().format('X')
 		settings[key] = {
 			key,
-			value: JSON.stringify(this.state),
+			value: JSON.stringify(_.omit(this.state, 'dirty', 'submitted')),
 		}
 
 		user.set('settings', settings)
