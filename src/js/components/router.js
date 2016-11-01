@@ -11,6 +11,7 @@ import UserLogin from '../components/user/login'
 import UserRegister from '../components/user/register'
 
 import ForecastIndex from '../components/forecast/index'
+import FeedbackIndex from '../components/feedback/index'
 
 function requireAuthentication (nextState, replace) {
 	if ( ! user.isLoggedIn) return replace('/users/login')
@@ -34,6 +35,9 @@ export default (
 			// Forecast CRUD
 			<Redirect from="forecasts" to={'forecasts/' + moment().utc().format('YYYY-MM-DD')} />
 			<Route path="forecasts/:date" component={ForecastIndex} onEnter={requireAuthentication} />
+
+			// Feedback form
+			<Route path="feedback" component={FeedbackIndex} onEnter={requireAuthentication} />
 
 			<Route path="*" component={NoMatch} />
 		</Route>
