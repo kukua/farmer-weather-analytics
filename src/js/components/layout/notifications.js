@@ -3,6 +3,7 @@ import _ from 'underscore'
 import { connect } from 'react-redux'
 import { NotificationContainer, NotificationManager } from 'react-notifications'
 import { FetchError } from '../../lib/fetch'
+import userActions from '../../actions/user'
 
 const mapStateToProps = (state) => {
 	return { errors: state.error }
@@ -21,6 +22,11 @@ class Notifications extends React.Component {
 		}
 	}
 
+	onLogout () {
+		userActions.logout()
+		this.context.router.replace('/users/login')
+	}
+
 	componentWillMount () {
 		this.handle(this.props.errors)
 	}
@@ -37,6 +43,10 @@ class Notifications extends React.Component {
 			handled.push(item)
 
 			NotificationManager.error(this.formatMessage(item), 'Whoops!')
+
+			if (item.err.response && item.err.response.status === 401) {
+				this.onLogout()
+			}
 		})
 
 		this.setState({ handled })
@@ -58,6 +68,9 @@ class Notifications extends React.Component {
 
 Notifications.propTypes = {
 	errors: React.PropTypes.array
+}
+Notifications.contextTypes = {
+	router: React.PropTypes.object.isRequired
 }
 
 export default connect(
